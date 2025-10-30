@@ -20,8 +20,11 @@
   "homepage": "https://github.com/vydurya-arun/assetlist_webapp_backend#readme",
   "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "joi": "^18.0.1",
+    "mongoose": "^8.19.2",
     "nodemon": "^3.1.10"
   }
 }
