@@ -36,6 +36,9 @@ export const registerAdmin = async (req, res) => {
         })
         await user.save();
 
+        // Invalidate the cache after creating a user
+        await redisClient.del("all_users");
+
         return res.status(201).json({success:true, message:"registeration successfully"})
 
     } catch (error) {
