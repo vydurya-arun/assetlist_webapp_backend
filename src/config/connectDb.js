@@ -26,10 +26,9 @@ export const connectDB = async () => {
     }
 }
 
+// Graceful shutdown
 process.on("SIGINT", async () => {
-    if (client) {
-        await client.close();
-        console.log("🔒 MongoDB connection closed")
-    }
-    process.exit(0);
+  await mongoose.connection.close();
+  console.log(" MongoDB connection closed gracefully");
+  process.exit(0);
 });

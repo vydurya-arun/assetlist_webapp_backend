@@ -1,6 +1,7 @@
 import userModel from "../models/userModel.js";
 import { registerValidator } from "../validators/registerValidate.js";
 import bcrypt from "bcryptjs";
+import redisClient from "../config/redisClient.js";
 
 export const registerAdmin = async (req, res) => {
     try {
@@ -44,10 +45,23 @@ export const registerAdmin = async (req, res) => {
 
 export const getAlluser = async(req,res) =>{
     try {
+
+        const cacheKey = "all_users";
+
+        // fetch data from redis cache
+        const cachedData = await redisClient.get(cacheKey);
+
+        if(cachedData){
+            return res.status(200).json({success:true, fromCache:true, data:JSON.parse(cachedData)});
+        }
+
         const user = await userModel.find().select("-password");
         if(!user){
             return res.status(404).json({ success: false, message: "Cannot get userdata" });
         }
+
+        //store data to redis
+        await redisClient.setEx(cacheKey, 300, JSON.stringify(user))
 
         return res.status(200).json({success: true, data: user})
     } catch (error) {
