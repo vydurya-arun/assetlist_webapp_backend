@@ -1,7 +1,12 @@
 import userModel from "../models/userModel.js";
-import { registerValidator } from "../validators/registerValidate.js";
+import {
+  loginValidator,
+  registerValidator,
+} from "../validators/authValidate.js";
 import bcrypt from "bcryptjs";
 import redisClient from "../config/redisClient.js";
+import { createSessionAndSetCookies } from "../utils/createSessionAndSetCookies.js";
+import sessionModel from "../models/sessionModel.js";
 
 export const registerAdmin = async (req, res) => {
   try {
@@ -17,12 +22,10 @@ export const registerAdmin = async (req, res) => {
     }
     const { userName, email, password, role } = req.body;
     if (!userName || !email || !password || !role) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Username, email, password, or role is missing",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Username, email, password, or role is missing",
+      });
     }
 
     const existUser = await userModel.findOne({ email });
@@ -101,9 +104,128 @@ export const getAlluser = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    console.error("getAlluser error:", error.message);
     return res
       .status(500)
-      .json({ success: false, message: "Internal Server Error" });
+      .json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+  }
+};
+
+export const loginAdmin = async (req, res) => {
+  try {
+    const { error } = loginValidator.validate(req.body, {
+      abortEarly: false,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        errors: error.details.map((err) => err.message),
+      });
+    }
+
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(404).json({
+        success: false,
+        message: "email or password is missing",
+      });
+    }
+
+    // Find user
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    // Check role
+    if (user.role !== "admin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied: Admins only" });
+    }
+
+    // Compare password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Incorrect password" });
+    }
+
+    // Create session + tokens + cookies
+    await createSessionAndSetCookies(req, res, user, { singleDevice: true });
+
+    const safeUser = {
+      id: user._id,
+      username: user.userName,
+      email: user.email,
+      role: user.role,
+    };
+
+    return res
+      .status(200)
+      .json({
+        success: true,
+        user: safeUser,
+        message: "User login successful",
+      });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const refreshToken = req.cookies.refreshToken;
+
+    if (refreshToken) {
+      // Find the session by refreshToken
+      const session = await sessionModel.findOne({ refreshToken, valid: true });
+
+      if (session) {
+        // Invalidate the session
+        session.valid = false;
+        session.refreshToken = "";
+        await session.save();
+      }
+    }
+
+    // Clear cookies
+    res.clearCookie("accessToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    });
+    res.clearCookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Logout successful" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
   }
 };
