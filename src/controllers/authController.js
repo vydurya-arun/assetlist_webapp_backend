@@ -164,12 +164,20 @@ export const loginAdmin = async (req, res) => {
     // Create session + tokens + cookies
     await createSessionAndSetCookies(req, res, user, { singleDevice: true });
 
+    // Update login time
+    user.lastLoginAt = new Date();
+    await user.save();
+
     const safeUser = {
       id: user._id,
       username: user.userName,
       email: user.email,
       role: user.role,
+      lastLoginAt: user.lastLoginAt
     };
+
+    // Invalidate the cache after creating a user
+    await redisClient.del("all_users");
 
     return res.status(200).json({
       success: true,
