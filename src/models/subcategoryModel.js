@@ -17,7 +17,7 @@ const subcategorySchema = new mongoose.Schema(
       ref: "Category",
       required: true,
     },
-    discription: {
+    description: {
       type: String,
       maxlength: 250,
     },
