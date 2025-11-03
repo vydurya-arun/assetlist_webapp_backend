@@ -2,9 +2,20 @@ import mongoose from "mongoose";
 import redisClient from "../config/redisClient.js";
 import categoryModel from "../models/categoryModel.js";
 import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
+import { categoryValidationSchema } from "../validators/categoryValidate.js";
 
 export const createCategory = async (req, res) => {
   try {
+    const { error } = categoryValidationSchema.validate(req.body, {
+        abortEarly: false,
+    });
+
+    if (error) {
+        return res.status(400).json({
+        success: false,
+        errors: error.details.map((err) => err.message),
+        });
+    }
     const { categoryName, description } = req.body;
     if (!categoryName || !description || !req.file) {
       return res.status(400).json({
@@ -27,8 +38,10 @@ export const createCategory = async (req, res) => {
 
     await category.save();
 
-    // Invalidate the cache after creating a user
-    await redisClient.del("all_category");
+    //  Clear Redis cache (optional)
+    if (redisClient?.isOpen) {
+      await redisClient.del("all_category");
+    }
 
     return res.status(201).json({ success: true, message: "category create sucessfully" });
   } catch (error) {
@@ -50,7 +63,7 @@ export const getAllCategory = async (req, res) => {
       }
     }
 
-    // ✅ If cache found
+    //  If cache found
     if (cachedData) {
       const parsedData = JSON.parse(cachedData);
       const totalItems = parsedData.length;
@@ -69,13 +82,13 @@ export const getAllCategory = async (req, res) => {
       });
     }
 
-    // ✅ Fallback to DB
+    //  Fallback to DB
     const category = await categoryModel.find();
     if (!category?.length) {
       return res.status(404).json({ success: false, message: "No category found" });
     }
 
-    // ✅ Store in Redis
+    // Store in Redis
     if (redisClient.isOpen) {
       try {
         await redisClient.setEx(cacheKey, 300, JSON.stringify(category));
@@ -146,8 +159,10 @@ export const deleteCategoryById = async (req, res) => {
       await deleteFromCloudinary(category.image.public_id);
     }
 
-    // Invalidate the cache after creating a user
-    await redisClient.del("all_category");
+    //  Clear Redis cache (optional)
+    if (redisClient?.isOpen) {
+      await redisClient.del("all_category");
+    }
 
     return res.status(200).json({ success: true, message: "delete category sucessfully" });
   } catch (error) {
