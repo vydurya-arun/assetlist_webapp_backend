@@ -176,8 +176,6 @@ export const loginAdmin = async (req, res) => {
       lastLoginAt: user.lastLoginAt
     };
 
-    // Invalidate the cache after creating a user
-    await redisClient.del("all_users");
 
     return res.status(200).json({
       success: true,
