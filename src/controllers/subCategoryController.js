@@ -218,6 +218,16 @@ export const deleteAllSubCategory = async (req, res) => {
 
 export const updatesubCategoryById = async (req, res) => {
   try {
+    const { error } = subcategoryValidationSchema.validate(req.body, {
+        abortEarly: false,
+    });
+
+    if (error) {
+        return res.status(400).json({
+        success: false,
+        errors: error.details.map((err) => err.message),
+        });
+    }
     const { id } = req.params;
 
     // Validate ID
