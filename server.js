@@ -4,6 +4,8 @@ import {connectDB} from './src/config/connectDb.js';
 import authRouter from './src/routes/authRoute.js';
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
+import categoryRoute from './src/routes/categoryRoute.js';
+import subCategoryRoute from './src/routes/subCategoryRoute.js';
 
 
 dotenv.config();
@@ -16,7 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(cookieParser());
 
-app.use('/api/auth', authRouter)
+app.use('/api/auth', authRouter);
+app.use('/api/category', categoryRoute);
+app.use('/api/subCategory', subCategoryRoute);
 app.get('/api/', (req, res) => res.send("Welcome to Assetlist webapp backend ✅"));
 
 connectDB().then(() => {
