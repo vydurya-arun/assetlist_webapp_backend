@@ -160,7 +160,7 @@ export const deletesubCategoryById = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    const subcategory = await subCatModel.findByIdAndDelete(id);
+    const subcategory = await subCatModel.findById(id);
     if (!subcategory) {
       return res.status(404).json({ success: false, message: "subcategory is not found" });
     }
@@ -168,6 +168,8 @@ export const deletesubCategoryById = async (req, res) => {
     if (subcategory.image?.public_id) {
       await deleteFromCloudinary(subcategory.image.public_id);
     }
+
+    const result = await subCatModel.deleteMany({});
 
     //  Clear Redis cache (optional)
     if (redisClient?.isOpen) {

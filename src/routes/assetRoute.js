@@ -1,12 +1,17 @@
 import express from 'express';
-import { createAsset, getAllAssets, getAllAssetsCards } from '../controllers/assetController.js';
+import { createAsset, deleteAllAssets, deleteAssetById, getAllAssets, getAllAssetsCards, getAssetUsingById, updateAssetById } from '../controllers/assetController.js';
 import { authMiddleware } from '../middileware/authMiddleware.js';
 import { uploadMultiple } from '../middileware/multer.js';
+import { paginate } from '../middileware/pagination.js';
 
 const assetRoute = express.Router();
 
 assetRoute.post('/',authMiddleware, uploadMultiple, createAsset);
-assetRoute.get('/',authMiddleware, getAllAssets);
-assetRoute.get('/allassets_cardview',authMiddleware, getAllAssetsCards);
+assetRoute.get('/',authMiddleware,paginate("asset", "all_assets"), getAllAssets);
+assetRoute.get('/:id',authMiddleware, getAssetUsingById);
+assetRoute.get('/allassets_cardview',authMiddleware,paginate("asset", "all_assets"), getAllAssetsCards);
+assetRoute.delete('/:id',authMiddleware,deleteAssetById);
+assetRoute.delete('/',authMiddleware,deleteAllAssets);
+assetRoute.put('/:id',authMiddleware,uploadMultiple,updateAssetById)
 
 export default assetRoute;

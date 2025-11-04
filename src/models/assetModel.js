@@ -116,5 +116,5 @@ assetSchema.pre("save", function (next) {
 // Geospatial index
 assetSchema.index({ location: "2dsphere" });
 
-const assetModel = mongoose.model("asset", assetSchema);
+const assetModel = mongoose.model("Asset", assetSchema);
 export default assetModel;
