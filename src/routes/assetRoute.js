@@ -8,10 +8,10 @@ const assetRoute = express.Router();
 
 assetRoute.post('/',authMiddleware, uploadMultiple, createAsset);
 assetRoute.get('/',authMiddleware,paginate("asset", "all_assets"), getAllAssets);
-assetRoute.get('/:id',authMiddleware, getAssetUsingById);
+assetRoute.get('/:slug',authMiddleware, getAssetUsingById);
 assetRoute.get('/allassets_cardview',authMiddleware,paginate("asset", "all_assets"), getAllAssetsCards);
-assetRoute.delete('/:id',authMiddleware,deleteAssetById);
+assetRoute.delete('/:slug',authMiddleware,deleteAssetById);
 assetRoute.delete('/',authMiddleware,deleteAllAssets);
-assetRoute.put('/:id',authMiddleware,uploadMultiple,updateAssetById)
+assetRoute.put('/:slug',authMiddleware,uploadMultiple,updateAssetById)
 
 export default assetRoute;

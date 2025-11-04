@@ -275,18 +275,14 @@ export const getAllAssetsCards = async (req, res) => {
 
 export const getAssetUsingById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { slug } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ sucess: false, message: "ID is required" });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid ID format" });
+    if (!slug) {
+      return res.status(400).json({ sucess: false, message: "slug is required" });
     }
 
     const asset = await assetModel
-      .findById(id)
+      .findOne({slug})
       .populate("categoryId", "categoryName")
       .populate("subcategoryId", "subCatname")
       .populate("postedBy", "userName");
@@ -302,17 +298,13 @@ export const getAssetUsingById = async (req, res) => {
 
 export const deleteAssetById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { slug } = req.params;
 
-    if (!id) {
-      return res.status(400).json({ success: false, message: "ID is required" });
+    if (!slug) {
+      return res.status(400).json({ success: false, message: "slug is required" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid ID format" });
-    }
-
-    const asset = await assetModel.findById(id);
+    const asset = await assetModel.findOne({slug});
     if (!asset) {
       return res.status(404).json({ success: false, message: "asset is not found" });
     }
@@ -392,18 +384,15 @@ export const updateAssetById = async (req, res) => {
       });
     }
 
-    const { id } = req.params;
+    const { slug } = req.params;
 
     //  Validate ID
-    if (!id) {
-      return res.status(400).json({ success: false, message: "ID is required" });
-    }
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid ID format" });
+    if (!slug) {
+      return res.status(400).json({ success: false, message: "slug is required" });
     }
 
     //  Find existing asset
-    const asset = await assetModel.findById(id);
+    const asset = await assetModel.findOne({slug});
     if (!asset) {
       return res.status(404).json({ success: false, message: "Asset not found" });
     }
