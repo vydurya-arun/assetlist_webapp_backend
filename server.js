@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors'
 import categoryRoute from './src/routes/categoryRoute.js';
 import subCategoryRoute from './src/routes/subCategoryRoute.js';
+import assetRoute from './src/routes/assetRoute.js';
 
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRouter);
 app.use('/api/category', categoryRoute);
 app.use('/api/subCategory', subCategoryRoute);
+app.use('/api/asset', assetRoute);
 app.get('/api/', (req, res) => res.send("Welcome to Assetlist webapp backend ✅"));
 
 connectDB().then(() => {

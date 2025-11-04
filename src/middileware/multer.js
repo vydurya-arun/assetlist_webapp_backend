@@ -1,9 +1,9 @@
 import multer from "multer";
 
-// Store files in memory instead of disk
+// Store files in memory (for direct Cloudinary upload)
 const storage = multer.memoryStorage();
 
-// Only allow images
+// File type filter (only allow images)
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|gif|webp/;
   const extname = allowedTypes.test(file.originalname.toLowerCase());
@@ -13,46 +13,32 @@ const fileFilter = (req, file, cb) => {
   else cb(new Error("Only image files are allowed (jpeg, jpg, png, gif, webp)!"), false);
 };
 
-// Set limits for file size (optional)
-const limits = {
-  fileSize: 25 * 1024 * 1024, // 25MB per file
-};
+//File size limit (25 MB)
+const limits = { fileSize: 25 * 1024 * 1024 };
 
+// Base multer instance
 export const upload = multer({ storage, fileFilter, limits });
 
-
-
+// Handle both single `coverImage` and multiple `images` fields
 export const uploadMultiple = (req, res, next) => {
-  const handler = upload.array("file", 8); // allow up to 8 files
+  const handler = upload.fields([
+    { name: "coverImage", maxCount: 1 },
+    { name: "images", maxCount: 8 },
+  ]);
 
   handler(req, res, (err) => {
     if (err) return next(err);
 
-    let existingCount = 0;
-
-    // existingImages might come as JSON string or array depending on frontend
-    if (req.body.existingImages) {
-      try {
-        const parsed = JSON.parse(req.body.existingImages);
-        existingCount = Array.isArray(parsed) ? parsed.length : 0;
-      } catch {
-        // if it's not JSON (maybe sent as multiple form fields)
-        if (Array.isArray(req.body.existingImages)) {
-          existingCount = req.body.existingImages.length;
-        } else {
-          existingCount = 1; // single string case
-        }
-      }
-    }
-
-    const newCount = req.files?.length || 0;
-    const totalCount = existingCount + newCount;
+    // Custom image count validation
+    const coverImageCount = req.files?.coverImage ? req.files.coverImage.length : 0;
+    const galleryCount = req.files?.images ? req.files.images.length : 0;
+    const totalCount = coverImageCount + galleryCount;
 
     if (totalCount < 1) {
-      return next(new Error("You must have at least 1 images (max 8 allowed)."));
+      return next(new Error("You must upload at least 1 image (cover or gallery)."));
     }
     if (totalCount > 8) {
-      return next(new Error("Maximum 8 images allowed."));
+      return next(new Error("You can upload a maximum of 8 images in total."));
     }
 
     next();
@@ -60,11 +46,4 @@ export const uploadMultiple = (req, res, next) => {
 };
 
 
-export const uploadReview = (req, res, next) => {
-  const handler = upload.array("file", 6); // allow 0–6 files
 
-  handler(req, res, (err) => {
-    if (err) return next(err); // multer error
-    next();
-  });
-};
