@@ -7,6 +7,7 @@ import cors from 'cors'
 import categoryRoute from './src/routes/categoryRoute.js';
 import subCategoryRoute from './src/routes/subCategoryRoute.js';
 import assetRoute from './src/routes/assetRoute.js';
+import otpRouter from './src/routes/otpRoute.js';
 
 
 dotenv.config();
@@ -23,6 +24,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/category', categoryRoute);
 app.use('/api/subCategory', subCategoryRoute);
 app.use('/api/asset', assetRoute);
+app.use('/api/otp', otpRouter);
 app.get('/api/', (req, res) => res.send("Welcome to Assetlist webapp backend ✅"));
 
 connectDB().then(() => {
