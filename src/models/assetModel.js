@@ -7,6 +7,11 @@ const assetSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    seller:{
+      name:{type: String, default:null},
+      email:{type: String,unique:true,default:null},
+      phone:{type:String,unique:true,default:null},
+    },
     slug: {
       type: String,
       unique: true,

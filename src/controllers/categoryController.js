@@ -16,7 +16,7 @@ export const createCategory = async (req, res) => {
         errors: error.details.map((err) => err.message),
         });
     }
-    const { categoryName, description } = req.body;
+    const { categoryName, description ,isActive} = req.body;
     if (!categoryName || !description || !req.file) {
       return res.status(400).json({
         success: false,
@@ -34,6 +34,7 @@ export const createCategory = async (req, res) => {
         public_id: cloudResults.public_id,
         url: cloudResults.url,
       },
+      isActive
     });
 
     await category.save();
