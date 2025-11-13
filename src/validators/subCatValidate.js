@@ -17,10 +17,7 @@ export const subcategoryValidationSchema = Joi.object({
       "string.empty": "Category ID is required",
       "string.pattern.base": "Invalid Category ID format (must be a valid ObjectId)",
     }),
-  image: Joi.object({
-    public_id: Joi.string().optional(),
-    url: Joi.string().uri().optional(),
-  }).optional(),
+
 
   isActive: Joi.boolean().optional(),
 });

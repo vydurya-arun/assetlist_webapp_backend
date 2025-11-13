@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import redisClient from "../config/redisClient.js";
-import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
 import subCatModel from "../models/subcategoryModel.js";
 import { subcategoryValidationSchema } from "../validators/subCatValidate.js";
 
@@ -26,24 +25,17 @@ export const createSubCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    if (!subCatname || !description || !req.file) {
+    if (!subCatname || !description) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: subCatname, description, or image file",
+        message: "Missing required fields: subCatname, description",
       });
     }
-
-    //upload cloudinary
-    const cloudResults = await uploadToCloudinary(req.file.buffer, "subcategory");
 
     const subcategory = new subCatModel({
       subCatname,
       categoryId:categoryId,
       description,
-      image: {
-        public_id: cloudResults.public_id,
-        url: cloudResults.url,
-      },
     });
 
     await subcategory.save();
@@ -93,7 +85,7 @@ export const getAllsubCategory = async (req, res) => {
     }
 
     //  Fallback to DB
-    const subcategory = await subCatModel.find().populate("categoryId", "categoryName image");
+    const subcategory = await subCatModel.find().populate("categoryId", "categoryName");
     if (!subcategory?.length) {
       return res.status(404).json({ success: false, message: "No subcategory found" });
     }
@@ -137,7 +129,7 @@ export const getsubCategoryById = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    const subcategory = await subCatModel.findById(id).populate("categoryId", "categoryName image");
+    const subcategory = await subCatModel.findById(id).populate("categoryId", "categoryName");
     if (!subcategory) {
       return res.status(404).json({ success: false, message: "subcategory is not found" });
     }
@@ -165,10 +157,6 @@ export const deletesubCategoryById = async (req, res) => {
       return res.status(404).json({ success: false, message: "subcategory is not found" });
     }
 
-    if (subcategory.image?.public_id) {
-      await deleteFromCloudinary(subcategory.image.public_id);
-    }
-
     const result = await subCatModel.deleteMany({});
 
     //  Clear Redis cache (optional)
@@ -191,12 +179,6 @@ export const deleteAllSubCategory = async (req, res) => {
       return res.status(404).json({success: false, message: "No subcategories found to delete"});
     }
 
-    // Delete all Cloudinary images
-    for (const category of subcategories) {
-      if (category.image?.public_id) {
-        await deleteFromCloudinary(category.image.public_id);
-      }
-    }
 
     //Delete all categories from DB
     const result = await subCatModel.deleteMany({});
@@ -246,24 +228,6 @@ export const updatesubCategoryById = async (req, res) => {
 
     if (!subcategory) {
       return res.status(404).json({ success: false, message: "subCategory not found" });
-    }
-
-    //  Handle new image upload (if provided)
-    if (req.file) {
-      // Delete old image from Cloudinary if exists
-      if (subcategory?.image?.public_id) {
-        await deleteFromCloudinary(subcategory.image.public_id);
-      }
-
-      const cloudResult = await uploadToCloudinary(req.file.buffer, "subcategory");
-
-      // Ensure updates.image exists
-      if (!updates.image) {
-        updates.image = {};
-      }
-
-      updates.image.url = cloudResult.url;
-      updates.image.public_id = cloudResult.public_id;
     }
 
     //  Merge updates into subcategory

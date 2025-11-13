@@ -16,10 +16,6 @@ const categorySchema = new mongoose.Schema(
       type: String,
       maxlength: 250,
     },
-    image: {
-      public_id: { type: String },
-      url: { type: String },
-    },
     isActive: {
       type: Boolean,
       default: true,

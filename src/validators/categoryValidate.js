@@ -11,10 +11,6 @@ export const categoryValidationSchema = Joi.object({
     "string.max": "Description should not exceed 250 characters",
   }),
 
-  image: Joi.object({
-    public_id: Joi.string().optional(),
-    url: Joi.string().uri().optional(),
-  }).optional(),
 
   isActive: Joi.boolean().optional(),
 });
