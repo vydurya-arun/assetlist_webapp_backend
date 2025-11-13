@@ -143,10 +143,8 @@ export const deleteCategoryById = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    const category = await categoryModel.findByIdAndDelete(id);
-    if (!category) {
-      return res.status(404).json({ success: false, message: "category is not found" });
-    }
+     await categoryModel.findByIdAndDelete(id);
+
 
     //  Clear Redis cache (optional)
     if (redisClient?.isOpen) {

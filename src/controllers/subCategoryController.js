@@ -152,12 +152,7 @@ export const deletesubCategoryById = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    const subcategory = await subCatModel.findById(id);
-    if (!subcategory) {
-      return res.status(404).json({ success: false, message: "subcategory is not found" });
-    }
-
-    const result = await subCatModel.deleteMany({});
+    await subCatModel.findByIdAndDelete(id);
 
     //  Clear Redis cache (optional)
     if (redisClient?.isOpen) {
