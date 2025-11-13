@@ -6,8 +6,8 @@ import { paginate } from "../middileware/pagination.js";
 const contactRouter = express.Router();
 
 // Routes
-contactRouter.get("/",paginate("contact", "all_contact"), getContacts);       // GET all contacts
+contactRouter.get("/",authMiddleware,paginate("contact", "all_contact"), getContacts);       // GET all contacts
 contactRouter.post("/", createContact);    // POST new contact
-contactRouter.delete("/:id", deleteContact); // DELETE contact by ID
+contactRouter.delete("/:id",authMiddleware, deleteContact); // DELETE contact by ID
 
 export default contactRouter;
