@@ -249,7 +249,7 @@ export const getAllAssetsCards = async (req, res) => {
       .populate("categoryId", "categoryName")
       .populate("subcategoryId", "subCatname")
       .populate("postedBy", "userName")
-      .select("-address -images -mapFrameLink -description");
+      .select("-address -images -mapFrameLink -description -location");
 
     if (!asset?.length) {
       return res.status(404).json({ success: false, message: "No asset found" });
