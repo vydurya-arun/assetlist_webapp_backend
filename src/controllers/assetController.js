@@ -6,6 +6,7 @@ import { assetValidator } from "../validators/assetValidate.js";
 
 export const createAsset = async (req, res) => {
   try {
+    const postId = req.user.id;
     const { error } = assetValidator.validate(req.body, {
       abortEarly: false,
     });
@@ -31,20 +32,20 @@ export const createAsset = async (req, res) => {
       tags,
       brands,
       condition,
-      postedBy,
+      seller
     } = req.body;
 
-    if (!categoryId || !subcategoryId || !postedBy) {
+    if (!categoryId || !subcategoryId ) {
       return res.status(400).json({
         success: false,
-        message: "categoryId, subcategoryId, and postedBy are required.",
+        message: "categoryId, subcategoryId, are required.",
       });
     }
 
     if (
       !mongoose.Types.ObjectId.isValid(categoryId) ||
-      !mongoose.Types.ObjectId.isValid(subcategoryId) ||
-      !mongoose.Types.ObjectId.isValid(postedBy)
+      !mongoose.Types.ObjectId.isValid(subcategoryId)
+
     ) {
       return res.status(400).json({
         success: false,
@@ -62,7 +63,8 @@ export const createAsset = async (req, res) => {
       !mapFrameLink ||
       !quantity ||
       !brands ||
-      !condition
+      !condition || 
+      !seller
     ) {
       return res.status(400).json({
         success: false,
@@ -73,6 +75,7 @@ export const createAsset = async (req, res) => {
     // Handle file uploads
     let coverImage = null;
     let images = [];
+
 
     if (req.files) {
       if (req.files.coverImage && req.files.coverImage[0]) {
@@ -97,6 +100,8 @@ export const createAsset = async (req, res) => {
       }
     }
 
+
+
     // Create asset
     const asset = new assetModel({
       title,
@@ -112,9 +117,10 @@ export const createAsset = async (req, res) => {
       tags,
       brands,
       condition,
-      postedBy,
+      postedBy : postId,
       coverImage,
       images,
+      seller
     });
 
     await asset.save();

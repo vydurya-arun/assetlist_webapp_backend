@@ -14,6 +14,12 @@ export const assetValidator = Joi.object({
     state: Joi.string().max(50).allow("", null),
     country: Joi.string().max(50).allow("", null),
   }).optional(),
+  seller: Joi.object({
+    name: Joi.string().max(50).allow("", null),
+    phone: Joi.string().max(50).allow("", null),
+    email: Joi.string().trim().email().lowercase().required(),
+
+  }).optional(),
 
   price: Joi.number().min(0).default(0),
 
@@ -41,33 +47,18 @@ export const assetValidator = Joi.object({
 
   quantity: Joi.number().min(1).default(1),
 
-  tags: Joi.array()
-    .items(
-      Joi.string().valid(
-        "feature",
-        "new",
-        "popular",
-        "trending",
-        "sale",
-        "limited",
-        "all"
-      )
-    )
-    .default(["all"]),
-
   brands: Joi.string().max(50).allow("", null),
 
   status: Joi.string()
     .valid("available", "sold", "archived")
     .default("available"),
+  tags: Joi.string()
+    .valid("feature", "new", "popular", "trending", "sale", "limited")
+    .default("feature"),
 
   condition: Joi.string()
     .valid("new", "used", "refurbished")
     .default("new"),
 
   isActive: Joi.boolean().default(true),
-
-  postedBy: Joi.string().required().messages({
-    "any.required": "Posted user ID is required",
-  }),
 });

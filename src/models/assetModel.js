@@ -78,8 +78,8 @@ const assetSchema = new mongoose.Schema(
     },
     tags: {
       type: [String],
-      enum: ["feature", "new", "popular", "trending", "sale", "limited", "all"],
-      default: ["all"],
+      enum: ["feature", "new", "popular", "trending", "sale", "limited"],
+      default: "feature",
     },
     brands: {
       type: String,
@@ -119,7 +119,7 @@ assetSchema.pre("save", function (next) {
 
 
 // Geospatial index
-assetSchema.index({ location: "2dsphere" });
+// assetSchema.index({ location: "2dsphere" });
 
 const assetModel = mongoose.model("Asset", assetSchema);
 export default assetModel;
