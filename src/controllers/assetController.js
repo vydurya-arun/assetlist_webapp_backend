@@ -7,6 +7,9 @@ import { assetValidator } from "../validators/assetValidate.js";
 export const createAsset = async (req, res) => {
   try {
     const postId = req.user.id;
+    if (req.body.address) req.body.address = JSON.parse(req.body.address);
+    if (req.body.seller) req.body.seller = JSON.parse(req.body.seller);
+    if (req.body.location) req.body.location = JSON.parse(req.body.location);
     const { error } = assetValidator.validate(req.body, {
       abortEarly: false,
     });
