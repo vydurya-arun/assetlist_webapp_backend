@@ -140,6 +140,44 @@ export const getsubCategoryById = async (req, res) => {
   }
 };
 
+export const getsubCategoryUsingCategory = async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    if (!categoryId) {
+      return res.status(400).json({ success: false, message: "Category ID is required" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).json({ success: false, message: "Invalid Category ID format" });
+    }
+
+    // Fetch all subcategories where categoryId matches
+    const subcategories = await subCatModel
+      .find({ categoryId })
+      .populate("categoryId", "categoryName");
+
+    if (subcategories.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No subcategories found for this category",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      totalItems: subcategories.length,
+      data: subcategories,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 export const deletesubCategoryById = async (req, res) => {
   try {
     const { id } = req.params;

@@ -1,13 +1,10 @@
-import redisClient from "../config/redisClient.js";
 import assetModel from "../models/assetModel.js";
-
 
 export const searchAllProduct = async (req, res) => {
   try {
-    const { title } = req.query;
+    const title = req.query.title?.trim();
 
-    // simple validation
-    if (!title || title.trim() === "") {
+    if (!title) {
       return res.status(200).json({
         success: true,
         data: [],
@@ -15,41 +12,14 @@ export const searchAllProduct = async (req, res) => {
       });
     }
 
-    const cacheKey = `search:${title.toLowerCase()}`;
-
-    // Try Redis cache first
-    if (redisClient.isOpen) {
-      try {
-        const cachedData = await redisClient.get(cacheKey);
-        if (cachedData) {
-          return res.status(200).json({
-            success: true,
-            data: JSON.parse(cachedData),
-            message: "Fetched from cache",
-          });
-        }
-      } catch (err) {
-        console.warn("⚠️ Redis get failed:", err.message);
-      }
-    }
-
-    // MongoDB query
-    const query = { title: { $regex: title, $options: "i" } };
-    const asset = await assetModel.find(query);
-
-    // Cache the result for 10 minutes
-    if (redisClient.isOpen && asset.length > 0) {
-      try {
-        await redisClient.setEx(cacheKey, 600, JSON.stringify(asset));
-      } catch (err) {
-        console.warn("⚠️ Redis set failed:", err.message);
-      }
-    }
+    const asset = await assetModel.find({
+      title: { $regex: `^${title}`, $options: "i" }, // starts with letter
+    });
 
     return res.status(200).json({
       success: true,
       data: asset,
-      message: asset.length > 0 ? "Asset found" : "No asset found",
+      message: asset.length ? "Asset found" : "No asset found",
     });
   } catch (error) {
     return res.status(500).json({

@@ -8,9 +8,9 @@ const assetSchema = new mongoose.Schema(
       required: true,
     },
     seller:{
-      name:{type: String, default:null},
-      email:{type: String,unique:true,default:null},
-      phone:{type:String,unique:true,default:null},
+      name:{type: String, },
+      email:{type: String,},
+      phone:{type:String,},
     },
     slug: {
       type: String,
@@ -119,7 +119,7 @@ assetSchema.pre("save", function (next) {
 
 
 // Geospatial index
-// assetSchema.index({ location: "2dsphere" });
+assetSchema.index({ location: "2dsphere" });
 
 const assetModel = mongoose.model("Asset", assetSchema);
 export default assetModel;
