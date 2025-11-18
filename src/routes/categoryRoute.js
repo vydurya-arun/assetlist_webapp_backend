@@ -9,6 +9,7 @@ const categoryRoute = express.Router();
 
 categoryRoute.post('/',authMiddleware, createCategory);
 categoryRoute.get('/', authMiddleware,paginate("category", "all_category"), getAllCategory)
+categoryRoute.get('/public',paginate("category", "all_category"), getAllCategory)
 categoryRoute.get('/:id',authMiddleware, getCategoryById);
 categoryRoute.delete('/:id',authMiddleware, deleteCategoryById);
 categoryRoute.delete('/',authMiddleware, deleteAllCategory);

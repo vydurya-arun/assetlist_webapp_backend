@@ -15,17 +15,18 @@ export const createCategory = async (req, res) => {
         errors: error.details.map((err) => err.message),
         });
     }
-    const { categoryName, description ,isActive} = req.body;
-    if (!categoryName || !description) {
+    const { categoryName, description,icon ,isActive} = req.body;
+    if (!categoryName || !description || !icon) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: category_name, description",
+        message: "Missing required fields: category_name,icon, description",
       });
     }
 
     const category = new categoryModel({
       categoryName,
       description,
+      icon,
       isActive
     });
 

@@ -4,6 +4,9 @@ export const categoryValidationSchema = Joi.object({
   categoryName: Joi.string().trim().required().messages({
     "string.empty": "Category name is required",
   }),
+  icon: Joi.string().trim().required().messages({
+    "string.empty": "Category icon is required",
+  }),
 
   slug: Joi.string().trim().lowercase().optional(),
 
