@@ -305,13 +305,13 @@ export const getAssetUsingById = async (req, res) => {
 
 export const deleteAssetById = async (req, res) => {
   try {
-    const { slug } = req.params;
+    const { id } = req.params;
 
-    if (!slug) {
-      return res.status(400).json({ success: false, message: "slug is required" });
+    if (!id) {
+      return res.status(400).json({ success: false, message: "Id is required" });
     }
 
-    const asset = await assetModel.findOne({slug});
+    const asset = await assetModel.findById(id);
     if (!asset) {
       return res.status(404).json({ success: false, message: "asset is not found" });
     }
@@ -328,7 +328,7 @@ export const deleteAssetById = async (req, res) => {
       }
     }
 
-    const result = await assetModel.deleteMany({});
+     await assetModel.findByIdAndDelete(id);
 
     //  Clear Redis cache (optional)
     if (redisClient?.isOpen) {
@@ -391,15 +391,15 @@ export const updateAssetById = async (req, res) => {
       });
     }
 
-    const { slug } = req.params;
+    const { id } = req.params;
 
     //  Validate ID
-    if (!slug) {
-      return res.status(400).json({ success: false, message: "slug is required" });
+    if (!id) {
+      return res.status(400).json({ success: false, message: "id is required" });
     }
 
     //  Find existing asset
-    const asset = await assetModel.findOne({slug});
+    const asset = await assetModel.findById(id);
     if (!asset) {
       return res.status(404).json({ success: false, message: "Asset not found" });
     }

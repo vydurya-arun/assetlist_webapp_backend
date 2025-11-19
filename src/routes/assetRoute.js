@@ -10,8 +10,8 @@ assetRoute.post('/',authMiddleware, uploadMultiple, createAsset);
 assetRoute.get('/',authMiddleware,paginate("asset", "all_assets"), getAllAssets);
 assetRoute.get('/cardview',paginate("asset", "all_assets"), getAllAssetsCards);
 assetRoute.get('/:slug', getAssetUsingById);
-assetRoute.delete('/:slug',authMiddleware,deleteAssetById);
+assetRoute.delete('/:id',authMiddleware,deleteAssetById);
 assetRoute.delete('/',authMiddleware,deleteAllAssets);
-assetRoute.put('/:slug',authMiddleware,uploadMultiple,updateAssetById)
+assetRoute.put('/:id',authMiddleware,uploadMultiple,updateAssetById)
 
 export default assetRoute;
