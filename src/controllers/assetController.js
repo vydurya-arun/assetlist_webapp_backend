@@ -382,7 +382,7 @@ export const deleteAllAssets = async (req, res) => {
 
 export const updateAssetById = async (req, res) => {
   try {
-    //  Validate input body
+    // Validate input body
     const { error } = assetValidator.validate(req.body, { abortEarly: false });
     if (error) {
       return res.status(400).json({
@@ -393,12 +393,12 @@ export const updateAssetById = async (req, res) => {
 
     const { id } = req.params;
 
-    //  Validate ID
+    // Validate ID
     if (!id) {
       return res.status(400).json({ success: false, message: "id is required" });
     }
 
-    //  Find existing asset
+    // Find existing asset
     const asset = await assetModel.findById(id);
     if (!asset) {
       return res.status(404).json({ success: false, message: "Asset not found" });
@@ -408,7 +408,41 @@ export const updateAssetById = async (req, res) => {
     let coverImage = asset.coverImage;
     let images = asset.images;
 
-    //  Handle new file uploads (only if provided)
+    // Handle images to delete
+    if (req.body.imagesToDelete) {
+      try {
+        const imagesToDelete = JSON.parse(req.body.imagesToDelete);
+        if (Array.isArray(imagesToDelete)) {
+          // Delete from Cloudinary
+          for (const img of imagesToDelete) {
+            if (img?.public_Id) {
+              await deleteFromCloudinary(img.public_Id);
+            }
+          }
+          // Remove from images array
+          images = images.filter(existingImg => 
+            !imagesToDelete.some(toDelete => toDelete.public_Id === existingImg.public_Id)
+          );
+        }
+      } catch (parseError) {
+        console.error("Error parsing imagesToDelete:", parseError);
+      }
+    }
+
+    // Handle existing images
+    if (req.body.existingImages) {
+      try {
+        const existingImages = JSON.parse(req.body.existingImages);
+        // Keep only the existing images that are still referenced
+        images = images.filter(existingImg => 
+          existingImages.some(keepImg => keepImg.public_Id === existingImg.public_Id)
+        );
+      } catch (parseError) {
+        console.error("Error parsing existingImages:", parseError);
+      }
+    }
+
+    // Handle new file uploads (only if provided)
     if (req.files) {
       // Replace cover image if new one uploaded
       if (req.files.coverImage && req.files.coverImage[0]) {
@@ -424,17 +458,8 @@ export const updateAssetById = async (req, res) => {
         };
       }
 
-      // Replace gallery images if new ones uploaded
+      // Add new gallery images (don't replace all, just add new ones)
       if (req.files.images && req.files.images.length > 0) {
-        // Delete old gallery images
-        if (Array.isArray(asset.images) && asset.images.length > 0) {
-          for (const img of asset.images) {
-            if (img?.public_Id) {
-              await deleteFromCloudinary(img.public_Id);
-            }
-          }
-        }
-
         const imageUploads = await Promise.all(
           req.files.images.map(async (file) => {
             const result = await uploadToCloudinary(file.buffer, "assets");
@@ -444,18 +469,19 @@ export const updateAssetById = async (req, res) => {
             };
           })
         );
-        images = imageUploads;
+        // Add new images to existing ones
+        images = [...images, ...imageUploads];
       }
     }
 
-    //  Apply updates safely
+    // Apply updates safely
     updates.coverImage = coverImage;
     updates.images = images;
 
     Object.assign(asset, updates);
     await asset.save();
 
-    //  Clear Redis cache
+    // Clear Redis cache
     if (redisClient?.isOpen) {
       await redisClient.del("all_assets");
     }
@@ -463,8 +489,14 @@ export const updateAssetById = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Asset updated successfully",
+      data: asset
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Internal Server Error", error: error.message});
+    console.error("Update asset error:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Internal Server Error", 
+      error: error.message
+    });
   }
 };
