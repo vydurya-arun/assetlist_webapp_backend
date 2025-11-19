@@ -16,10 +16,10 @@ const categorySchema = new mongoose.Schema(
       type: String,
       maxlength: 250,
     },
-    image: {
-      public_id: { type: String },
-      url: { type: String },
-    },
+    icon: {
+    type: String,
+    required: true,
+  },
     isActive: {
       type: Boolean,
       default: true,

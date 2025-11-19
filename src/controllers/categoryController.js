@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import redisClient from "../config/redisClient.js";
 import categoryModel from "../models/categoryModel.js";
-import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary.js";
 import { categoryValidationSchema } from "../validators/categoryValidate.js";
 
 export const createCategory = async (req, res) => {
@@ -16,24 +15,19 @@ export const createCategory = async (req, res) => {
         errors: error.details.map((err) => err.message),
         });
     }
-    const { categoryName, description } = req.body;
-    if (!categoryName || !description || !req.file) {
+    const { categoryName, description,icon ,isActive} = req.body;
+    if (!categoryName || !description || !icon) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: category_name, description, or image file",
+        message: "Missing required fields: category_name,icon, description",
       });
     }
-
-    //upload cloudinary
-    const cloudResults = await uploadToCloudinary(req.file.buffer, "category");
 
     const category = new categoryModel({
       categoryName,
       description,
-      image: {
-        public_id: cloudResults.public_id,
-        url: cloudResults.url,
-      },
+      icon,
+      isActive
     });
 
     await category.save();
@@ -150,14 +144,8 @@ export const deleteCategoryById = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid ID format" });
     }
 
-    const category = await categoryModel.findByIdAndDelete(id);
-    if (!category) {
-      return res.status(404).json({ success: false, message: "category is not found" });
-    }
+     await categoryModel.findByIdAndDelete(id);
 
-    if (category.image?.public_id) {
-      await deleteFromCloudinary(category.image.public_id);
-    }
 
     //  Clear Redis cache (optional)
     if (redisClient?.isOpen) {
@@ -177,13 +165,6 @@ export const deleteAllCategory = async (req, res) => {
 
     if (categories.length === 0) {
       return res.status(404).json({success: false, message: "No categories found to delete"});
-    }
-
-    // Delete all Cloudinary images
-    for (const category of categories) {
-      if (category.image?.public_id) {
-        await deleteFromCloudinary(category.image.public_id);
-      }
     }
 
     //Delete all categories from DB
@@ -235,24 +216,6 @@ export const updateCategoryById = async (req, res) => {
 
     if (!category) {
       return res.status(404).json({ success: false, message: "Category not found" });
-    }
-
-    //  Handle new image upload (if provided)
-    if (req.file) {
-      // Delete old image from Cloudinary if exists
-      if (category?.image?.public_id) {
-        await deleteFromCloudinary(category.image.public_id);
-      }
-
-      const cloudResult = await uploadToCloudinary(req.file.buffer, "category");
-
-      // Ensure updates.image exists
-      if (!updates.image) {
-        updates.image = {};
-      }
-
-      updates.image.url = cloudResult.url;
-      updates.image.public_id = cloudResult.public_id;
     }
 
     //  Merge updates into category

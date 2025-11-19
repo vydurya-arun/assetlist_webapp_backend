@@ -7,13 +7,27 @@ const assetSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    seller:{
+      name:{type: String, },
+      email:{type: String,},
+      phone:{type:String,},
+    },
     slug: {
       type: String,
+      unique: true,
       lowercase: true,
     },
-    discription: {
+    description: {
       type: String,
       maxlength: 2500,
+    },
+    address: {
+      place: { type: String, maxlength: 50 },
+      street: { type: String, maxlength: 50 },
+      city: { type: String, maxlength: 50 },
+      pincode: { type: Number },
+      state: { type: String, maxlength: 50 },
+      country: { type: String, maxlength: 50 },
     },
     price: {
       type: Number,
@@ -27,8 +41,12 @@ const assetSchema = new mongoose.Schema(
     },
     subcategoryId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-      required: true,
+      ref: "SubCategory",
+      required: [true, "SubCategory ID is required"],
+    },
+    coverImage:{
+        public_Id: { type: String },
+        url: { type: String },
     },
     images: [
       {
@@ -37,16 +55,35 @@ const assetSchema = new mongoose.Schema(
       },
     ],
     location: {
-      type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: {
-        type: [Number],
-        default: [0, 0],
+      type: { type: String, enum: ["Point"], default: "Point", required: true },
+      coordinates: { type: [Number], required: true, default: [0, 0] },
+    },
+    yearofpurchase: {
+      type: Date,
+    },
+    mapFrameLink: {
+      type: String,
+      validate: {
+        validator: function (v) {
+          return !v || v.startsWith("https://") || v.startsWith("http://");
+        },
+        message: "Map frame link must be a valid URL",
       },
     },
+
     quantity: {
       type: Number,
       default: 1,
       min: 1,
+    },
+    tags: {
+      type: [String],
+      enum: ["feature", "new", "popular", "trending", "sale", "limited"],
+      default: "feature",
+    },
+    brands: {
+      type: String,
+      maxlength: 50,
     },
     status: {
       type: String,
@@ -55,7 +92,7 @@ const assetSchema = new mongoose.Schema(
     },
     condition: {
       type: String,
-      enenum: ["new", "used", "refurbished"],
+      enum: ["new", "used", "refurbished"],
       default: "new",
     },
     isActive: {
@@ -79,5 +116,10 @@ assetSchema.pre("save", function (next) {
   next();
 });
 
-const assetModel = mongoose.model("asset", assetSchema);
+
+
+// Geospatial index
+assetSchema.index({ location: "2dsphere" });
+
+const assetModel = mongoose.model("Asset", assetSchema);
 export default assetModel;
